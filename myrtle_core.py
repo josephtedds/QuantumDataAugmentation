@@ -4,6 +4,7 @@ import time
 import numpy as np
 import pandas as pd
 from functools import singledispatch
+import torch
 
 #####################
 # utils
@@ -30,7 +31,7 @@ default_table_formats = {float: '{:{w}.4f}', str: '{:>{w}s}', 'default': '{:{w}}
 
 def table_formatter(val, is_title=False, col_width=12, formats=None):
     formats = formats or default_table_formats
-    type_ = lambda val: float if isinstance(val, (float, np.float)) else type(val)
+    type_ = lambda val: float if isinstance(val, (float,)) else type(val)
     return (formats['title'] if is_title else formats.get(type_(val), formats['default'])).format(val, w=col_width)
 
 def every(n, col): 
@@ -61,6 +62,7 @@ def preprocess(dataset, transforms):
     dataset = copy.copy(dataset) #shallow copy
     for transform in transforms:
         dataset['data'] = transform(dataset['data'])
+    dataset['targets'] = np.array(torch.nn.functional.one_hot(torch.tensor(dataset['targets']),-1),dtype=float)
     return dataset
 
 @singledispatch

@@ -68,7 +68,7 @@ class DataLoader():
     def __iter__(self):
         if self.set_random_choices:
             self.dataset.set_random_choices() 
-        return ({'input': x.to(device).half(), 'target': y.to(device).long()} for (x,y) in self.dataloader)
+        return ({'input': x.to(device).half(), 'target': y.to(device).float()} for (x,y) in self.dataloader)
     
     def __len__(self): 
         return len(self.dataloader)
@@ -197,7 +197,7 @@ class GhostBatchNorm(BatchNorm):
 # Losses
 class CrossEntropyLoss(namedtuple('CrossEntropyLoss', [])):
     def __call__(self, log_probs, target):
-        return torch.nn.functional.nll_loss(log_probs, target, reduction='none')
+        return torch.nn.CrossEntropyLoss()(log_probs, target, reduction="")
     
 class KLLoss(namedtuple('KLLoss', [])):        
     def __call__(self, log_probs):
@@ -205,7 +205,7 @@ class KLLoss(namedtuple('KLLoss', [])):
 
 class Correct(namedtuple('Correct', [])):
     def __call__(self, classifier, target):
-        return classifier.max(dim = 1)[1] == target
+        return classifier.max(dim = 1)[1] == target.max(dim = 1)[1]
 
 class LogSoftmax(namedtuple('LogSoftmax', ['dim'])):
     def __call__(self, x):
@@ -215,14 +215,6 @@ x_ent_loss = Network({
   'loss':  (nn.CrossEntropyLoss(reduction='none'), ['logits', 'target']),
   'acc': (Correct(), ['logits', 'target'])
 })
-
-label_smoothing_loss = lambda alpha: Network({
-        'logprobs': (LogSoftmax(dim=1), ['logits']),
-        'KL':  (KLLoss(), ['logprobs']),
-        'xent':  (CrossEntropyLoss(), ['logprobs', 'target']),
-        'loss': (AddWeighted(wx=1-alpha, wy=alpha), ['xent', 'KL']),
-        'acc': (Correct(), ['logits', 'target']),
-    })
 
 trainable_params = lambda model: {k:p for k,p in model.named_parameters() if p.requires_grad}
 
@@ -330,7 +322,7 @@ def log_activations(node_names=('loss', 'acc')):
         if batch:
             state['_tmp_logs_'].extend((k, state[OUTPUT][k].detach()) for k in node_names)
         else:
-            res = {k: to_numpy(torch.cat(xs)).astype(np.float) for k, xs in group_by_key(state['_tmp_logs_']).items()}
+            res = {k: to_numpy(torch.cat(xs)).astype(float) for k, xs in group_by_key(state['_tmp_logs_']).items()}
             del state['_tmp_logs_']
             return {ACT_LOG: res}
     return step

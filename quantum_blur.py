@@ -359,10 +359,10 @@ def colours_channel_last(image):
     else:
         return image.transpose((1,2,0))
 
-def blur_image(image):
+def blur_image(image, alpha = 0.1):
     image_circuits = image2circuits(image)
     for i_circ in image_circuits:
-        partial_x(i_circ, 0.08)
+        partial_x(i_circ, alpha)
     return circuits2image(image_circuits)
     
 if __name__ == "__main__":

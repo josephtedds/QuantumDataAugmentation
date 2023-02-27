@@ -77,8 +77,11 @@ def normalize(ket):
     N = 0
     for amp in ket:
         N += amp*amp.conjugate()
-    for j,amp in enumerate(ket):
-        ket[j] = float(amp)/math.sqrt(N)
+    if N == 0:
+        ket = [1/math.sqrt(len(ket)) for i in range(len(ket))]
+    else:
+        for j,amp in enumerate(ket):
+            ket[j] = float(amp)/math.sqrt(N)
     return ket
 
 def height2circuit(height, log=False, eps=1e-2):

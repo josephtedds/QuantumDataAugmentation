@@ -77,7 +77,17 @@ def _(x, mean, std):
     x *= 1.0/std
     return x
 
-unnormalise = lambda x, mean, std: x*std + mean
+@singledispatch
+def unnormalise(x, mean, std):
+    return (x - mean) / std
+
+@unnormalise.register(np.ndarray) 
+def _(x, mean, std): 
+    #faster inplace for numpy arrays
+    x = np.array(x, np.float32).transpose((1,2,0))
+    x *= std
+    x += mean
+    return x.transpose((2,0,1))
 
 @singledispatch
 def pad(x, border):

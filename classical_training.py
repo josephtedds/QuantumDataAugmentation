@@ -87,9 +87,9 @@ def train_model(train_set, valid_set, epochs = 20, n_runs = 3, train_transforms 
 def train_classical_augmentations():
     train_set, valid_set = pre_process_data()
     
-    train_model(train_set, valid_set, epochs=1, train_transforms=[Crop(32,32), FlipLR()], save_log_path= r"experiment_runs/id")
-    train_model(train_set, valid_set, epochs=1, train_transforms=[Crop(32,32), FlipLR(), Cutout(8,8)], save_log_path= r"experiment_runs/cutout_8x8")
-    train_model(train_set, valid_set, epochs=1, train_transforms=[Crop(32,32), FlipLR(), GaussianBlur(8,8)], save_log_path= r"experiment_runs/gaussian_blur_8x8")
+    train_model(train_set, valid_set, train_transforms=[Crop(32,32), FlipLR()], save_log_path= r"experiment_runs/id")
+    train_model(train_set, valid_set, train_transforms=[Crop(32,32), FlipLR(), Cutout(8,8)], save_log_path= r"experiment_runs/cutout_8x8")
+    train_model(train_set, valid_set, train_transforms=[Crop(32,32), FlipLR(), GaussianBlur(8,8)], save_log_path= r"experiment_runs/gaussian_blur_8x8")
 
 def train_quantum_augmentations():
     alphas = [0.05, 0.1, 0.2, 0.5]
@@ -108,8 +108,6 @@ def train_quantum_augmentations():
         train_model(
             train_set, 
             valid_set,
-            epochs=1,
-            n_runs=1,
             train_transforms=[Crop(32,32), FlipLR(), QuantumBlur(i_n, i_n, i_alpha)],
             save_log_path= rf"experiment_runs/quantum_blur_{i_n}x{i_n}_{i_alpha}"
         )

@@ -19,7 +19,6 @@ from functools import partial
 import matplotlib.pyplot as plt
 import numpy as np
 import qiskit
-
 from myrtle_core import (
     Crop,
     Cutout,

@@ -2,7 +2,6 @@ from collections import namedtuple
 from typing import Dict, List, Tuple
 
 import numpy as np
-
 from myrtle_core import normalise, unnormalise
 from myrtle_torch_backend import cifar10_mean, cifar10_std
 from quantum_blur import blur_image

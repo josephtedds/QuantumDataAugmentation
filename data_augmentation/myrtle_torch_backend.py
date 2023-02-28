@@ -3,9 +3,8 @@ from itertools import count
 
 import numpy as np
 import torch
-from torch import nn
-
 from myrtle_core import *
+from torch import nn
 
 torch.backends.cudnn.benchmark = True
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

@@ -7,7 +7,7 @@ from myrtle_torch_backend import cifar10_mean, cifar10_std
 from quantum_blur import blur_image
 
 
-class QuantumBlur(namedtuple("QuantumBlur", ("h", "w", "alpha"))):
+class QuantumBlur(namedtuple("QuantumBlur", ("h", "w", "alpha", "normalise"))):
     """Quantum blur transformation for data augmentation.
 
     This transforms (3 x n x m) data i.e. image data using Wooton et
@@ -24,6 +24,8 @@ class QuantumBlur(namedtuple("QuantumBlur", ("h", "w", "alpha"))):
         Width of the patch to blur
     alpha: float
         RZ rotational parameter for quantum blur.
+    normalise: bool
+        Whether to normalise the data for CIFAR-10
     """
 
     def __call__(self, x: np.ndarray, x0: int, y0: int) -> np.ndarray:
@@ -42,17 +44,21 @@ class QuantumBlur(namedtuple("QuantumBlur", ("h", "w", "alpha"))):
         np.ndarray
             Image with a patch blurred
         """
-        x_unnormalised = unnormalise(
-            x[..., y0 : y0 + self.h, x0 : x0 + self.w],
-            mean=np.array(cifar10_mean, dtype=np.float32),
-            std=np.array(cifar10_std, dtype=np.float32),
-        )
-        x[..., y0 : y0 + self.h, x0 : x0 + self.w] = normalise(
-            blur_image(x_unnormalised, self.alpha).transpose((1, 2, 0)),
-            mean=np.array(cifar10_mean, dtype=np.float32),
-            std=np.array(cifar10_std, dtype=np.float32),
-        ).transpose((2, 0, 1))
+        if self.normalise:
+            x_unnormalised = unnormalise(
+                x[..., y0 : y0 + self.h, x0 : x0 + self.w],
+                mean=np.array(cifar10_mean, dtype=np.float32),
+                std=np.array(cifar10_std, dtype=np.float32),
+            )
+            x[..., y0 : y0 + self.h, x0 : x0 + self.w] = normalise(
+                blur_image(x_unnormalised, self.alpha).transpose((1, 2, 0)),
+                mean=np.array(cifar10_mean, dtype=np.float32),
+                std=np.array(cifar10_std, dtype=np.float32),
+            ).transpose((2, 0, 1))
+        else:
+            x[..., y0 : y0 + self.h, x0 : x0 + self.w] = blur_image(x[..., y0 : y0 + self.h, x0 : x0 + self.w], self.alpha)
         return x
+
 
     def options(self, shape: Tuple[int]) -> List[Dict[str, int]]:
         """Get the set of choices for bounding corner positions.
@@ -113,7 +119,7 @@ class GaussianBlur(namedtuple("GaussianBlur", ("h", "w"))):
         """
         x[..., y0 : y0 + self.h, x0 : x0 + self.w] = x[
             ..., y0 : y0 + self.h, x0 : x0 + self.w
-        ] + np.random.normal(loc=0, scale=0.01, size=(3, self.h, self.w))
+        ] + np.random.normal(loc=0, scale=0.1, size=(3, self.h, self.w))
         return x
 
     def options(self, shape: Tuple[int]) -> List[Dict[str, int]]:

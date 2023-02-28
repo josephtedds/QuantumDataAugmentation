@@ -420,7 +420,66 @@ class MlTrainingResourceEstimator:
         )
 
 
-if __name__ == "__main__":
-    test = sim_ansatz(4, 10, 1)
-    test_resources = MlTrainingResourceEstimator(**test)
-    print(test_resources.estimate_training_time_in_seconds(1, 1000, 100))
+if __name__ == "__main__": 
+    
+    CIRCUIT_EXAMPLES = [
+        {
+            "sim_circuit": {
+                "ansatz_idx": 2, 
+                "n_qubits": 4, 
+                "layers": 1,
+            },
+            "diff_method": DifferentiationMethod.FINITE_DIFFERENCE
+        },
+        {
+            "sim_circuit": {
+                "ansatz_idx": 2, 
+                "n_qubits": 4, 
+                "layers": 1,
+            },
+            "diff_method": DifferentiationMethod.PARAMETER_SHIFT
+        },
+        {
+            "sim_circuit": {
+                "ansatz_idx": 18, 
+                "n_qubits": 4, 
+                "layers": 1,
+            },
+            "diff_method": DifferentiationMethod.FINITE_DIFFERENCE
+        },
+        {
+            "sim_circuit": {
+                "ansatz_idx": 18, 
+                "n_qubits": 4, 
+                "layers": 1,
+            },
+            "diff_method": DifferentiationMethod.PARAMETER_SHIFT
+        },
+        {
+            "sim_circuit": {
+                "ansatz_idx": 7, 
+                "n_qubits": 10, 
+                "layers": 4,
+            },
+            "diff_method": DifferentiationMethod.PARAMETER_SHIFT
+        },
+    ]
+
+    for i_circuit_example in CIRCUIT_EXAMPLES:
+        # Construct Sim circuit
+        i_circ_ansatz_stats = i_circuit_example["sim_circuit"]
+        i_circ = sim_ansatz(**i_circ_ansatz_stats)
+
+        # Generate estimator object
+        i_resource_estimator = MlTrainingResourceEstimator(
+            **i_circ, diff_method=i_circuit_example["diff_method"]
+        )
+        i_circ_estimate = i_resource_estimator.estimate_num_training_circuits(1000, 100)
+        print(
+            f"For a Sim{i_circ_ansatz_stats['ansatz_idx']} ansatz with "
+            f"{i_circ_ansatz_stats['n_qubits']} and "
+            f"{i_circ_ansatz_stats['layers']} layer(s), if you trained this"
+            " for 100 epochs on a training set size of 100, you'd need "
+            f"{i_circ_estimate:,}"
+            " circuits."
+        )

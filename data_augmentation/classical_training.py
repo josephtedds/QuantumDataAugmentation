@@ -204,7 +204,7 @@ def train_quantum_augmentations():
             train_transforms=[
                 Crop(32, 32),
                 FlipLR(),
-                QuantumBlur(i_n, i_n, i_alpha),
+                QuantumBlur(i_n, i_n, i_alpha, True),
             ],
             save_log_path=i_save_path,
         )

@@ -61,6 +61,8 @@ def classical_comparison_plot(show_plots=True, save=False, run: int = 0):
 
         if show_plots:
             plt.show()
+        
+        plt.clf()
 
 
 def quantum_blur_hyperparameter(
@@ -225,7 +227,7 @@ def show_quantum_blur(show_images: bool = True, save: bool = False):
 
 
 if __name__ == "__main__":
-    quantum_blur_hyperparameter(save=True)
+    # quantum_blur_hyperparameter(save=True)
     classical_comparison_plot(show_plots=False, save=True)
     # show_classical_data_augmentation()
     # show_quantum_blur()

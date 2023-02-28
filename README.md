@@ -92,14 +92,19 @@ Now, the choice of map $s(x,y)$ is such that the Hamming distance of neighbourin
 $$\sqrt{h(x,y)} \to i \sqrt{h(x,y)} + \frac{\theta}{2}\sum_j \sqrt{h(x_j, y_j)},$$
  for pixels $(x_j, y_j)$ that have mappings $s(x_j, y_j)$ differing from $s(x,y)$ by only one bit. So for small angles, this is close to linearly interpolating between 'close' pixels. 
 
-![Quantum blurs with different patch sizes](figures\README_imgs\quantum_blur_sizes.png)
+<p align="center">
+  <img src="figures\README_imgs\quantum_blur_sizes.png" alt="Quantum blurs with different patch sizes"/>
+</p>
+
 The above image shows quantum blur with different patch sizes for the image, and acting on it with $\text{RX}(\alpha),$ with $\alpha = 0$.
 
 For the experiments carried out below, we'll be using the [res-net](https://arxiv.org/abs/1512.03385) model from [myrtle.ai](https://myrtle.ai/learn/how-to-train-your-resnet/) as it's ridiculously fast to run with classical data augmentation. The original model runs for 24 epochs and on average achieves the human level accuracy of 94% on a 10 class classification problem. The dataset is [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) a collection of 32 x 32 colour images in 10 classes (a mixture of animals and vehicles)  with a training set of size 50,000 images and 10,000 images in the test set. 
 
 First, we'll compare this model to classical data augmentations to understand if quantum data augmentation can prove useful.
 
-![Loss on the training set for different data augmentation techniques](figures\training_performance_run_0_train_loss.png)
+<p align="center">
+  <img src="figures\training_performance_run_0_train_loss.png" alt="Loss on the training set for different data augmentation techniques"/>
+</p>
 
 For the experiment, we ran the ResNet model for 20 epochs, normalising the data from training set metrics then applying the translation (padding + cropping) and mirroring transformations before a final data augmentation technique. This last technique is one of:
  - Identity (do nothing)
@@ -110,7 +115,9 @@ Where the patches are 8x8 and chosen at random every epoch. Each model ran 3 tim
 
 As the graph above shows, the separations in training loss emerged early on and remained until the end. While the validation losses were less stable, the fact that all of the validation losses (and accuracies) were near-identical at the end of the training suggests a more difficult dataset or simpler model will be needed to evaluate the overall performance of quantum blur. The main constraint on this method was the ability to run the quantum simulations. As a first implementation, it was about 40x slower to run the quantum blur compared to the cutout layer. However, the fact that this method can run on a large dataset and successfully train a model is encouraging as a first pass.
 
-![Loss on the test set for different data augmentation techniques](figures\training_performance_run_0_valid_loss.png)
+<p align="center">
+  <img src="figures\training_performance_run_0_valid_loss.png" alt="Loss on the test set for different data augmentation techniques"/>
+</p>
 
 Note that if we can efficiently implement these transformations, then this may be suitable for use primarily as quantum-inspired approach, where larger patch sizes are broken down into smaller patches to reamin simulatable.
 
@@ -120,8 +127,12 @@ In addition, a random hyperparameter optimisation sweep was run to determine if 
 
 As the graphs below show, there isn't much difference in the performance for the differnt models and as above, a more sensible comparison - either with a simpler model or more difficult dataset is likely required to show separation between augmentations.
 
-![Training set loss of hyperparameter optimisation run for quantum blur](figures\hyperparam_opt_run0_train_loss.png)
-![Test set loss of hyperparameter optimisation run for quantum blur](figures\hyperparam_opt_run0_valid_loss.png)
+<p align="center">
+  <img src="figures\hyperparam_opt_run0_train_loss.png" alt="Training set loss of hyperparameter optimisation run for quantum blur"/>
+</p>
+<p align="center">
+  <img src="figures\hyperparam_opt_run0_valid_loss.png" alt="Test set loss of hyperparameter optimisation run for quantum blur"/>
+</p>
 
 # Mixup
 [Mixup](https://arxiv.org/abs/1710.09412) is another classical data augmentation technique. Here, two images are combined together linearly to create an image part-way between two images, and the corresponding labels are also linearly combined.
@@ -154,7 +165,9 @@ It also introduces a number of opportunities to explore this further:
 
 Hopefully this leaves readers better aware of the practical constraints of QML and encourages thinking about alternative approaches for the NISQ era.
 
-![Mixup strategies on CIFAR-10.](figures\README_imgs\mixup_comparison.png)
+<p>
+  <img src="figures\README_imgs\mixup_comparison.png" alt="Mixup strategies on CIFAR-10"/>
+</p>
 
 For easy comparison we have inverted the relationship with $\lambda$ for the Quantum Mixup. At $\lambda = 0$ this coincides with the identity on the first image, but for classical mixup this weights the linear combination entirely in favour of the second image. From the above image, it's clear that the quantum image is far less meaningful at $\lambda = 0.5$ and more blurry throughout the process. This suggests we may need to be careful about which values of $\lambda$ we sample from so we don't feed too much noise to the ML model. Additionally, the choice of label for each quantum mixup image is unlikely to be as straightforward as a linear combination of labels as with classical mixup. Instead, the suggested choice of a rescaled and recentered $\tanh$ function may be more suited. It is worth noting that this implementation is far slower than the quantum blur, and substantial speedup would be required to attack the CIFAR-10 dataset with this.
 

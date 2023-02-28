@@ -398,7 +398,7 @@ def blur_image(image, alpha=0.1):
 
 
 if __name__ == "__main__":
-    DATA_DIR = "./data"
+    DATA_DIR = "../data"
     dataset = cifar10(root=DATA_DIR)
 
     transforms = [

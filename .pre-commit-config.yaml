@@ -25,10 +25,10 @@ repos:
   rev: 3.0.0  # pick a git hash / tag to point to
   hooks:
   - id: flakeheaven
-    exclude: "^myrtle.*|^quantum_blur.py"
+    exclude: "^data_augmentation/myrtle.*|^data_augmentation/quantum_blur.py"
 - repo: https://github.com/pycqa/pydocstyle
   rev: 6.1.1  # pick a git hash / tag to point to
   hooks:
   - id: pydocstyle
     additional_dependencies: ["pydocstyle[toml]"]
-    exclude: "^myrtle.*|^quantum_blur.py"
+    exclude: "^data_augmentation/myrtle.*|^data_augmentation/quantum_blur.py"

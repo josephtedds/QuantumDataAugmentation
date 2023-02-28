@@ -62,7 +62,7 @@ def net(
 
 
 def pre_process_data() -> Tuple[DataLoader, DataLoader]:
-    DATA_DIR = "./data"
+    DATA_DIR = "../data"
     dataset = cifar10(root=DATA_DIR)
     timer = Timer()
     print("Preprocessing training data")

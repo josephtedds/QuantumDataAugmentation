@@ -48,7 +48,7 @@ from functools import lru_cache as cache
 
 
 @cache(None)
-def cifar10(root="./data"):
+def cifar10(root="../data"):
     import torchvision
 
     download = lambda train: torchvision.datasets.CIFAR10(

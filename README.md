@@ -153,6 +153,11 @@ As the SWAP gate is a unitary matrix, we can also take fractional powers of the 
 
 Due to time constraints, we have been unable to explore but provide comparisons to classical mixup on two CIFAR-10 images.
 
+<p>
+  <img src="figures\README_imgs\mixup_comparison.png" alt="Mixup strategies on CIFAR-10"/>
+</p>
+
+For easy comparison we have inverted the relationship with $\lambda$ for the Quantum Mixup. At $\lambda = 0$ this coincides with the identity on the first image, but for classical mixup this weights the linear combination entirely in favour of the second image. From the above image, it's clear that the quantum image is far less meaningful at $\lambda = 0.5$ and more blurry throughout the process. This suggests we may need to be careful about which values of $\lambda$ we sample from so we don't feed too much noise to the ML model. Additionally, the choice of label for each quantum mixup image is unlikely to be as straightforward as a linear combination of labels as with classical mixup. Instead, the suggested choice of a rescaled and recentered $\tanh$ function may be more suited. It is worth noting that this implementation is far slower than the quantum blur, and substantial speedup would be required to attack the CIFAR-10 dataset with this.
 
 # Conclusions
 As with many QML experiments, we are unable to conclude much more than the method is successful at achieving the task. However, given the size of the dataset trained on, this is encouraging, as it allows studies of dataset sizes that may be closer to real-world applications.
@@ -166,12 +171,6 @@ It also introduces a number of opportunities to explore this further:
  - Training with Quantum Mixup to determine whether this approach has merit.
 
 Hopefully this leaves readers better aware of the practical constraints of QML and encourages thinking about alternative approaches for the NISQ era.
-
-<p>
-  <img src="figures\README_imgs\mixup_comparison.png" alt="Mixup strategies on CIFAR-10"/>
-</p>
-
-For easy comparison we have inverted the relationship with $\lambda$ for the Quantum Mixup. At $\lambda = 0$ this coincides with the identity on the first image, but for classical mixup this weights the linear combination entirely in favour of the second image. From the above image, it's clear that the quantum image is far less meaningful at $\lambda = 0.5$ and more blurry throughout the process. This suggests we may need to be careful about which values of $\lambda$ we sample from so we don't feed too much noise to the ML model. Additionally, the choice of label for each quantum mixup image is unlikely to be as straightforward as a linear combination of labels as with classical mixup. Instead, the suggested choice of a rescaled and recentered $\tanh$ function may be more suited. It is worth noting that this implementation is far slower than the quantum blur, and substantial speedup would be required to attack the CIFAR-10 dataset with this.
 
 ## Acknowledgements
 Thanks must go to James R. Wootton and Marcel Pfaffhauser for their experiments with and implementation Quantum Blur. Additionally to David Page for a lightning-fast model for classification on CIFAR-10.

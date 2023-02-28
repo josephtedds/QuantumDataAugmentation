@@ -175,4 +175,4 @@ For easy comparison we have inverted the relationship with $\lambda$ for the Qua
 Thanks must go to James R. Wootton and Marcel Pfaffhauser for their experiments with and implementation Quantum Blur. Additionally to David Page for a lightning-fast model for classification on CIFAR-10.
 
 And lastly: 
-> Written with [StackEdit](https://stackedit.io/). [sic]
+> Written with [StackEdit](https://stackedit.io/).

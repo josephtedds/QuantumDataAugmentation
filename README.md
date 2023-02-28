@@ -86,9 +86,7 @@ Given that quantum hardware is inherently noisy, adding some noise via a fixed o
 So, how do we convert noise on quantum hardware to quantum data augmentation techniques? We need an encoding of images that is efficient to both encode and decode. A simple choice in this instance is to use angle embedding with each qubit corresponding to a single pixel, and Z-measurements corresponding to the relative brightness of a pixel. Allowing the circuit to evolve for a period of time without interacting would apply the quantum hardware noise directly to the image.
 
 We'll take an alternative approach and make use of [Quantum Blur](https://arxiv.org/abs/2112.01646), a technique for both encoding / decoding image data into a quantum state and adding noise to it. For a given image, the grey-scale values (integers in the range [0, 255) ) are mapped to a height value $h(x,y)$ for each pixel labelled by $(x,y)$. Combining this with a mapping  to binary strings, $s : (x,y) \mapsto b \in \{0,1\}^n$, we can form a quantum state,
-$$
-|h \rangle = \frac{\sum_{(x,y)} \sqrt{h(x,y)} | s(x,y)\rangle}{\sqrt{\sum_{(x,y)} h(x,y)}}.
-$$
+$$|h \rangle = \frac{\sum_{(x,y)} \sqrt{h(x,y)} | s(x,y)\rangle}{\sqrt{\sum_{(x,y)} h(x,y)}}.$$
 
 For an RGB image, you obtain three quantum states $|h_R \rangle, |h_G \rangle, |h_B \rangle$ corresponding to the height maps for each RGB component. For decoding, the magnitude of the amplitude is unknown, so the largest value is mapped to 255. In practice, this arbitrary rescaling could be replaced with a high percentile value of the height distribution of the test set so it's more representative of the original image.
 
@@ -142,15 +140,15 @@ As the graphs below show, there isn't much difference in the performance for the
 [Mixup](https://arxiv.org/abs/1710.09412) is another classical data augmentation technique. Here, two images are combined together linearly to create an image part-way between two images, and the corresponding labels are also linearly combined.
 
 Explicitly, for data taking the form of image-class pairs $(x, y), \, x \in \mathbb{R}^{3 \times n \times m}, \, y \in \{0,1\}^2$, we can define the mixup of two images as the pair $(x^\ast, y^\ast)$ where
-$$
-x^\ast = \lambda x_0 + (1-\lambda )x_1, \quad y^\ast = \lambda y_0 + (1-\lambda )y_1, \quad \text{for } \lambda \in (0,1).
-$$
+
+$$x^\ast = \lambda x_0 + (1-\lambda )x_1, \quad y^\ast = \lambda y_0 + (1-\lambda )y_1, \quad \text{for } \lambda \in (0,1).$$
+
 This requires us to use one-hot encodings of class labels, so each input data is a binary vector instead of a class number so we can linearly interpolate the labels and it naturally extends to beyond binary classification. This transformation occurs once a batch of images has been chosen to process and does not require that the images are from different classes.
 
 In quantum computing, we can also combine states in a sensible fashion by considering the SWAP gate. The action of the SWAP gate is given by 
-$$
-\text{SWAP} | x_0\rangle | x_1\rangle = |x_1\rangle | x_0 \rangle. 
-$$
+
+$$\text{SWAP} | x_0\rangle | x_1\rangle = |x_1\rangle | x_0 \rangle.$$
+
 As the SWAP gate is a unitary matrix, we can also take fractional powers of the SWAP gate to [combine images](https://arxiv.org/abs/2007.11510). This provides us with a Quantum Mixup method, also parameterised by $\lambda \in (0,1)$ for gate application $\text{SWAP}^\lambda$.  It is not immediately clear what label value the new image should take. While linear interpolation, as in the classical case, could be sensible, a shifted and rescaled $\tanh$ function could also provide sensible labelling. 
 
 Due to time constraints, we have been unable to explore but provide comparisons to classical mixup on two CIFAR-10 images.

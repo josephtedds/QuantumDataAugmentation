@@ -1,6 +1,6 @@
 # Quantum Data Augmentation
 
-This provides an overview of the repository. If you want to explore any of these ideas further, then see [tutorial.py]().
+This provides an overview of the repository. If you want to explore any of these ideas further, then see [quick_start.ipynb](data_augmentation/quick_start.ipynb).
 
  1. **Motivation** - interesting algorithms in the NISQ era have low resource costs and are robust to noise.
  2. **Data augmentation** - classical and quantum data augmentation techniques.
@@ -49,7 +49,7 @@ For the following, we take the numbered ansatze from [Sim et al.](https://arxiv.
 |Sim18|Parameter Shift  | 1000 | 100 |3,300,000
 |Fixed circuit | N/A | 50,000 | 20 | 1,000,000
 
-Note that all the above choices can be customised in [ml_training.py]().
+Note that all the above choices can be customised in [ml_training.py](data_augmentation/ml_training.py).
 
 The number of circuit executions here are enormous. If the models take 0.1 seconds to run a single circuit (including all the classical overhead for loading, offloading, compilation and transpilation), then the first model would take just over a day's worth of QPU time to run. Realistically, this is likely to be infeasible unless you're one of the few people to own a quantum computer. Worse, these circuits aren't particularly complex or deep.
 Consider:
@@ -73,6 +73,10 @@ Data augmentation in classical computing is a technique to increase the performa
  - Cutout - sections of the image are completely cutout and replaced by blocks of colour. This increases robustness to noise.
  - Gaussian noise - sections of the image have Gaussian noise added to it (iid normal distributions). This increases robustness to noise.
 
+<p align="center">
+  <img src="figures\README_imgs\classical_data_aug_small.png" alt="Classical data augmentation techniques"/>
+</p>
+
 Given that quantum hardware is inherently noisy, adding some noise via a fixed or random circuit seems like something that should be possible especially in the near-term. Noise in this case can be [treated as a resource](https://arxiv.org/abs/2302.06584) for us.
 
 So, how do we convert noise on quantum hardware to quantum data augmentation techniques? We need an encoding of images that is efficient to both encode and decode. A simple choice in this instance is to use angle embedding with each qubit corresponding to a single pixel, and Z-measurements corresponding to the relative brightness of a pixel. Allowing the circuit to evolve for a period of time without interacting would apply the quantum hardware noise directly to the image.
@@ -85,17 +89,39 @@ $$
 For an RGB image, you obtain three quantum states $|h_R \rangle, |h_G \rangle, |h_B \rangle$ corresponding to the height maps for each RGB component. For decoding, the magnitude of the amplitude is unknown, so the largest value is mapped to 255. In practice, this arbitrary rescaling could be replaced with a high percentile value of the height distribution of the test set so it's more representative of the original image.
 
 Now, the choice of map $s(x,y)$ is such that the Hamming distance of neighbouring pixels is equal to 1. This means that interacting with a given qubit will also interact with neighbouring pixels (and some longer range correlations due to the mapping construction). Manipulating this embedding is achieved by applying rotational gates, which for an RX gate with small angle $\theta$ transforms  
-$$\sqrt{h(x,y)} \to i \sqrt{h(x,y)} + \frac{\theta}{2}\sum_j \sqrt{h(x_j, y_j)},$$ for pixels $(x_j, y_j)$ that have mappings $s(x_j, y_j)$ differing from $s(x,y)$ by only one bit. So for small angles, this is close to linearly interpolating between 'close' pixels. 
+$$\sqrt{h(x,y)} \to i \sqrt{h(x,y)} + \frac{\theta}{2}\sum_j \sqrt{h(x_j, y_j)},$$
+ for pixels $(x_j, y_j)$ that have mappings $s(x_j, y_j)$ differing from $s(x,y)$ by only one bit. So for small angles, this is close to linearly interpolating between 'close' pixels. 
+
+![Quantum blurs with different patch sizes](figures\README_imgs\quantum_blur_sizes.png)
+The above image shows quantum blur with different patch sizes for the image, and acting on it with $\text{RX}(\alpha),$ with $\alpha = 0$.
 
 For the experiments carried out below, we'll be using the [res-net](https://arxiv.org/abs/1512.03385) model from [myrtle.ai](https://myrtle.ai/learn/how-to-train-your-resnet/) as it's ridiculously fast to run with classical data augmentation. The original model runs for 24 epochs and on average achieves the human level accuracy of 94% on a 10 class classification problem. The dataset is [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) a collection of 32 x 32 colour images in 10 classes (a mixture of animals and vehicles)  with a training set of size 50,000 images and 10,000 images in the test set. 
 
-First, we'll compare this model to classical data augmentations to understand if quantum data augmentation can provide useful 
+First, we'll compare this model to classical data augmentations to understand if quantum data augmentation can prove useful.
 
-Note that if we can efficiently implement these transformations, then this may be suitable for use primarily as quantum-inspired approach, where larger images are fed through in patches.
+![Loss on the training set for different data augmentation techniques](figures\training_performance_run_0_train_loss.png)
+
+For the experiment, we ran the ResNet model for 20 epochs, normalising the data from training set metrics then applying the translation (padding + cropping) and mirroring transformations before a final data augmentation technique. This last technique is one of:
+ - Identity (do nothing)
+ - Cutout
+ - Gaussian blur, with location 0 and scale 0.01 (the graphs below suggest the choice of scale parameter was too small to have meaningful impact)
+ - Quantum blur, with $\alpha=0.1$
+Where the patches are 8x8 and chosen at random every epoch. Each model ran 3 times, and one of these is shown here (the other data can be found in the *experiment_runs* folder and these values seem to be fairly stable).
+
+As the graph above shows, the separations in training loss emerged early on and remained until the end. While the validation losses were less stable, the fact that all of the validation losses (and accuracies) were near-identical at the end of the training suggests a more difficult dataset or simpler model will be needed to evaluate the overall performance of quantum blur. The main constraint on this method was the ability to run the quantum simulations. As a first implementation, it was about 40x slower to run the quantum blur compared to the cutout layer. However, the fact that this method can run on a large dataset and successfully train a model is encouraging as a first pass.
+
+![Loss on the test set for different data augmentation techniques](figures\training_performance_run_0_valid_loss.png)
+
+Note that if we can efficiently implement these transformations, then this may be suitable for use primarily as quantum-inspired approach, where larger patch sizes are broken down into smaller patches to reamin simulatable.
 
 # Hyperparameter optimisation
 
 In addition, a random hyperparameter optimisation sweep was run to determine if there were dramatic changes in performance of the model with different sized patches or different intensities of blur. This sweep ran identically to the earlier experiments: 20 epochs on the CIFAR-10 dataset, with 3 models per set of hyperparameters.
+
+As the graphs below show, there isn't much difference in the performance for the differnt models and as above, a more sensible comparison - either with a simpler model or more difficult dataset is likely required to show separation between augmentations.
+
+![Training set loss of hyperparameter optimisation run for quantum blur](figures\hyperparam_opt_run0_train_loss.png)
+![Test set loss of hyperparameter optimisation run for quantum blur](figures\hyperparam_opt_run0_valid_loss.png)
 
 # Mixup
 [Mixup](https://arxiv.org/abs/1710.09412) is another classical data augmentation technique. Here, two images are combined together linearly to create an image part-way between two images, and the corresponding labels are also linearly combined.
@@ -114,7 +140,6 @@ As the SWAP gate is a unitary matrix, we can also take fractional powers of the 
 
 Due to time constraints, we have been unable to explore but provide comparisons to classical mixup on two CIFAR-10 images.
 
- 
 
 # Conclusions
 As with many QML experiments, we are unable to conclude much more than the method is successful at achieving the task. However, given the size of the dataset trained on, this is encouraging, as it allows studies of dataset sizes that may be closer to real-world applications.
@@ -128,6 +153,10 @@ It also introduces a number of opportunities to explore this further:
  - Training with Quantum Mixup to determine whether this approach has merit.
 
 Hopefully this leaves readers better aware of the practical constraints of QML and encourages thinking about alternative approaches for the NISQ era.
+
+![Mixup strategies on CIFAR-10.](figures\README_imgs\mixup_comparison.png)
+
+For easy comparison we have inverted the relationship with $\lambda$ for the Quantum Mixup. At $\lambda = 0$ this coincides with the identity on the first image, but for classical mixup this weights the linear combination entirely in favour of the second image. From the above image, it's clear that the quantum image is far less meaningful at $\lambda = 0.5$ and more blurry throughout the process. This suggests we may need to be careful about which values of $\lambda$ we sample from so we don't feed too much noise to the ML model. Additionally, the choice of label for each quantum mixup image is unlikely to be as straightforward as a linear combination of labels as with classical mixup. Instead, the suggested choice of a rescaled and recentered $\tanh$ function may be more suited. It is worth noting that this implementation is far slower than the quantum blur, and substantial speedup would be required to attack the CIFAR-10 dataset with this.
 
 ## Acknowledgements
 Thanks must go to James R. Wootton and Marcel Pfaffhauser for their experiments with and implementation Quantum Blur. Additionally to David Page for a lightning-fast model for classification on CIFAR-10.

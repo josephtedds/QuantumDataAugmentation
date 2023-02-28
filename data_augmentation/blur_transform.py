@@ -56,9 +56,10 @@ class QuantumBlur(namedtuple("QuantumBlur", ("h", "w", "alpha", "normalise"))):
                 std=np.array(cifar10_std, dtype=np.float32),
             ).transpose((2, 0, 1))
         else:
-            x[..., y0 : y0 + self.h, x0 : x0 + self.w] = blur_image(x[..., y0 : y0 + self.h, x0 : x0 + self.w], self.alpha)
+            x[..., y0 : y0 + self.h, x0 : x0 + self.w] = blur_image(
+                x[..., y0 : y0 + self.h, x0 : x0 + self.w], self.alpha
+            )
         return x
-
 
     def options(self, shape: Tuple[int]) -> List[Dict[str, int]]:
         """Get the set of choices for bounding corner positions.

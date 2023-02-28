@@ -15,11 +15,11 @@
 
 import math
 from functools import partial
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import qiskit
-from scipy.linalg import fractional_matrix_power
 from myrtle_core import (
     Crop,
     Cutout,
@@ -30,7 +30,8 @@ from myrtle_core import (
     transpose,
 )
 from myrtle_torch_backend import cifar10
-from typing import List
+from scipy.linalg import fractional_matrix_power
+
 
 def _image2heights(image: np.ndarray):
     """
@@ -401,12 +402,12 @@ def swap_images(image0, image1, fraction, log=False):
     """
     Given a pair of same sized grid images, a set of partial swaps is applied
     between corresponding qubits in each circuit.
-    
+
     Args:
         image0, image1 (Image): RGB encoded images.
         fraction (float): Fraction of swap gates to apply.
         log (bool): If given, a logarithmic decoding is used.
-            
+
     Returns:
         new_image0, new_image1 (Image): RGB encoded images.
     """
@@ -426,40 +427,49 @@ def swap_images(image0, image1, fraction, log=False):
     return new_image0, new_image1
 
 
-def swap_heights(height0, height1, fraction, log=False, ):
+def swap_heights(
+    height0,
+    height1,
+    fraction,
+    log=False,
+):
     """
     Given a pair of height maps for the same sized grid, a set of partial
     swaps is applied between corresponding qubits in each circuit.
-    
+
     Args:
         height0, height1 (dict): Dictionaries in which keys are coordinates
             for points on a grid, and the values are floats in the range 0
             to 1.
         fraction (float): Fraction of swap gates to apply.
         log (bool): If given, a logarithmic decoding is used.
-            
+
     Returns:
         new_height0, new_height1 (dict): As with the height inputs.
     """
 
-    assert _get_size(height0)==_get_size(height1), \
-    "Objects to be swapped are not the same size"   
-    
+    assert _get_size(height0) == _get_size(
+        height1
+    ), "Objects to be swapped are not the same size"
+
     # set up the circuit to be run
-    circuits = [height2circuit(height) for height in [height0,height1]]
+    circuits = [height2circuit(height) for height in [height0, height1]]
     combined_qc = combine_circuits(circuits[0], circuits[1])
     partialswap(combined_qc, fraction)
-    
+
     # run it an get the marginals for each original qubit register
-    p = _circuit2probs(combined_qc)           
-    marginals = probs2marginals(combined_qc, p)     
-    
+    p = _circuit2probs(combined_qc)
+    marginals = probs2marginals(combined_qc, p)
+
     # convert the marginals to heights
     new_heights = []
-    for j,marginal in enumerate(marginals):
-        new_heights.append( probs2height(marginal,size=eval(circuits[j].name),log=log) )
-        
+    for j, marginal in enumerate(marginals):
+        new_heights.append(
+            probs2height(marginal, size=eval(circuits[j].name), log=log)
+        )
+
     return new_heights[0], new_heights[1]
+
 
 def probs2marginals(combined_qc, probs):
     """
@@ -467,40 +477,35 @@ def probs2marginals(combined_qc, probs):
     circuit (made up of two equal sized circuits combined in parallel),
     this function returns the two marginals for each subcircuit.
     """
-    num_qubits = int(combined_qc.num_qubits/2)
-    
-    marginals = [{},{}]
+    num_qubits = int(combined_qc.num_qubits / 2)
+
+    marginals = [{}, {}]
     for string in probs:
         substrings = [string[0:num_qubits], string[num_qubits::]]
-        for j,substring in enumerate(substrings):
+        for j, substring in enumerate(substrings):
             if substring in marginals[j]:
                 marginals[j][substring] += probs[string]
             else:
                 marginals[j][substring] = probs[string]
-    
+
     return marginals
+
 
 def partialswap(combined_qc, fraction):
     """
     Apply a partial swap to a given combined circuit (made up of two equal
     sized circuits combined in parallel) by the given fraction.
     """
-    num_qubits = int(combined_qc.num_qubits/2)
-    
+    num_qubits = int(combined_qc.num_qubits / 2)
 
-    U = np.array([
-    [1, 0, 0, 0],
-    [0, 0, 1, 0],
-    [0, 1, 0, 0],
-    [0, 0, 0, 1]
-    ])
-    U = fractional_matrix_power(U,fraction)
+    U = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
+    U = fractional_matrix_power(U, fraction)
     for q in range(num_qubits):
         q0 = q
         q1 = num_qubits + q
-        combined_qc.unitary(U, [q0,q1],label='partial_swap')
+        combined_qc.unitary(U, [q0, q1], label="partial_swap")
 
-            
+
 def _circuit2probs(qc):
     """
     Runs the given circuit, and returns the resulting probabilities.
@@ -510,18 +515,19 @@ def _circuit2probs(qc):
     new_qc.data = []
     initial_ket = [1]
     for gate in qc.data:
-        if gate[0].name=='initialize':
-            initial_ket = _kron(initial_ket,gate[0].params)
+        if gate[0].name == "initialize":
+            initial_ket = _kron(initial_ket, gate[0].params)
         else:
             new_qc.data.append(gate)
     # then run it
     ket = qiskit.quantum_info.Statevector(initial_ket)
     ket = ket.evolve(new_qc)
     probs = ket.probabilities_dict()
-    
+
     return probs
 
-def combine_circuits(qc0,qc1):
+
+def combine_circuits(qc0, qc1):
     """
     Combines a pair of initialization circuits in parallel
     Creates a single register circuit with the combined number of qubits,
@@ -535,10 +541,10 @@ def combine_circuits(qc0,qc1):
     combined_qc = qiskit.QuantumCircuit(num_qubits)
 
     # extract statevectors for any initialization commands
-    kets = [None,None]
-    for j,qc in enumerate([qc0, qc1]):
+    kets = [None, None]
+    for j, qc in enumerate([qc0, qc1]):
         for gate in qc.data:
-            assert gate[0].name=='initialize', warning
+            assert gate[0].name == "initialize", warning
             kets[j] = gate[0].params
 
     # combine into a statevector for all the qubits
@@ -546,55 +552,89 @@ def combine_circuits(qc0,qc1):
     if kets[0] and kets[1]:
         ket = _kron(kets[0], kets[1])
     elif kets[0]:
-        ket = _kron(kets[0], [1]+[0]*(2**qc1.num_qubits-1))
+        ket = _kron(kets[0], [1] + [0] * (2**qc1.num_qubits - 1))
     elif kets[1]:
-        ket = _kron([1]+[0]*(2**qc0.num_qubits-1),kets[1])
+        ket = _kron([1] + [0] * (2**qc0.num_qubits - 1), kets[1])
 
     # use this to initialize
     if ket:
-        combined_qc.initialize(ket,range(num_qubits))
-    
+        combined_qc.initialize(ket, range(num_qubits))
+
     # prevent circuit name from being used for size determination
-    combined_qc.name = 'None'
-            
+    combined_qc.name = "None"
+
     return combined_qc
 
-def show_partial_swap(img0, img1, fractions: List[float], show_images: bool = True, save_path: str = None):
+
+def show_partial_swap(
+    img0,
+    img1,
+    fractions: List[float],
+    show_images: bool = True,
+    save_path: str = None,
+):
     img0 = colours_channel_first(img0)
     img1 = colours_channel_first(img1)
 
     for i_fraction in fractions:
         i_swapped_imgs = swap_images(img0, img1, i_fraction)
-        
+
         for j in range(2):
             plt.imshow(colours_channel_last(i_swapped_imgs[j]))
-            plt.axis('off')
+            plt.axis("off")
 
             if save_path is not None:
-                plt.savefig(f"{save_path}_{i_fraction}_{j}.png", bbox_inches='tight')
+                plt.savefig(
+                    f"{save_path}_{i_fraction}_{j}.png", bbox_inches="tight"
+                )
 
             if show_images:
                 plt.show()
 
-def classical_mixup(img0, img1, fractions: List[float], show_images: bool = True, save_path: str = None):
+
+def classical_mixup(
+    img0,
+    img1,
+    fractions: List[float],
+    show_images: bool = True,
+    save_path: str = None,
+):
     img0 = colours_channel_first(img0)
     img1 = colours_channel_first(img1)
 
     for i_fraction in fractions:
-        plt.imshow(np.array(colours_channel_last(i_fraction*img0 + (1-i_fraction)* img1),dtype=int))
-        plt.axis('off')
+        plt.imshow(
+            np.array(
+                colours_channel_last(
+                    i_fraction * img0 + (1 - i_fraction) * img1
+                ),
+                dtype=int,
+            )
+        )
+        plt.axis("off")
 
         if save_path is not None:
-            plt.savefig(f"{save_path}_{i_fraction}_{0}.png", bbox_inches='tight')
+            plt.savefig(
+                f"{save_path}_{i_fraction}_{0}.png", bbox_inches="tight"
+            )
 
         if show_images:
             plt.show()
-        
-        plt.imshow(np.array(colours_channel_last(i_fraction*img1 + (1-i_fraction) * img0),dtype=int))
-        plt.axis('off')
+
+        plt.imshow(
+            np.array(
+                colours_channel_last(
+                    i_fraction * img1 + (1 - i_fraction) * img0
+                ),
+                dtype=int,
+            )
+        )
+        plt.axis("off")
 
         if save_path is not None:
-            plt.savefig(f"{save_path}_{i_fraction}_{1}.png", bbox_inches='tight')
+            plt.savefig(
+                f"{save_path}_{i_fraction}_{1}.png", bbox_inches="tight"
+            )
 
         if show_images:
             plt.show()
@@ -625,7 +665,9 @@ if __name__ == "__main__":
     img1 = dataset["train"]["data"][0]
     img2 = dataset["train"]["data"][2]
 
-    classical_mixup(img1, img2, [0.2, 0.4, 0.6, 0.8], save_path=r"figures/classical_mixup")
+    classical_mixup(
+        img1, img2, [0.2, 0.4, 0.6, 0.8], save_path=r"figures/classical_mixup"
+    )
 
     img1_transformed = colours_channel_last(
         transformed_train_set.__getitem__(0)[0]
@@ -638,20 +680,21 @@ if __name__ == "__main__":
     plt.show()
 
     plt.imshow(img1_blurred)
-    plt.axis('off')
-    plt.savefig(r"figures/quantum_blur.png", bbox_inches='tight')
+    plt.axis("off")
+    plt.savefig(r"figures/quantum_blur.png", bbox_inches="tight")
     plt.show()
 
     plt.imshow(img1_transformed)
     plt.show()
 
-
     if QUANTUM_MIXUP:
         plt.imshow(img1)
-        plt.axis('off')
-        plt.savefig(r"figures/swapped_0_0.png", bbox_inches='tight')
+        plt.axis("off")
+        plt.savefig(r"figures/swapped_0_0.png", bbox_inches="tight")
 
         plt.imshow(img2)
-        plt.axis('off')
-        plt.savefig(r"figures/swapped_0_1.png", bbox_inches='tight')
-        show_partial_swap(img1, img2, [0.2, 0.4, 0.6, 0.8], save_path=r"figures/swapped")
+        plt.axis("off")
+        plt.savefig(r"figures/swapped_0_1.png", bbox_inches="tight")
+        show_partial_swap(
+            img1, img2, [0.2, 0.4, 0.6, 0.8], save_path=r"figures/swapped"
+        )

@@ -420,48 +420,48 @@ class MlTrainingResourceEstimator:
         )
 
 
-if __name__ == "__main__": 
-    
+if __name__ == "__main__":
+
     CIRCUIT_EXAMPLES = [
         {
             "sim_circuit": {
-                "ansatz_idx": 2, 
-                "n_qubits": 4, 
+                "ansatz_idx": 2,
+                "n_qubits": 4,
                 "layers": 1,
             },
-            "diff_method": DifferentiationMethod.FINITE_DIFFERENCE
+            "diff_method": DifferentiationMethod.FINITE_DIFFERENCE,
         },
         {
             "sim_circuit": {
-                "ansatz_idx": 2, 
-                "n_qubits": 4, 
+                "ansatz_idx": 2,
+                "n_qubits": 4,
                 "layers": 1,
             },
-            "diff_method": DifferentiationMethod.PARAMETER_SHIFT
+            "diff_method": DifferentiationMethod.PARAMETER_SHIFT,
         },
         {
             "sim_circuit": {
-                "ansatz_idx": 18, 
-                "n_qubits": 4, 
+                "ansatz_idx": 18,
+                "n_qubits": 4,
                 "layers": 1,
             },
-            "diff_method": DifferentiationMethod.FINITE_DIFFERENCE
+            "diff_method": DifferentiationMethod.FINITE_DIFFERENCE,
         },
         {
             "sim_circuit": {
-                "ansatz_idx": 18, 
-                "n_qubits": 4, 
+                "ansatz_idx": 18,
+                "n_qubits": 4,
                 "layers": 1,
             },
-            "diff_method": DifferentiationMethod.PARAMETER_SHIFT
+            "diff_method": DifferentiationMethod.PARAMETER_SHIFT,
         },
         {
             "sim_circuit": {
-                "ansatz_idx": 7, 
-                "n_qubits": 10, 
+                "ansatz_idx": 7,
+                "n_qubits": 10,
                 "layers": 4,
             },
-            "diff_method": DifferentiationMethod.PARAMETER_SHIFT
+            "diff_method": DifferentiationMethod.PARAMETER_SHIFT,
         },
     ]
 
@@ -474,7 +474,9 @@ if __name__ == "__main__":
         i_resource_estimator = MlTrainingResourceEstimator(
             **i_circ, diff_method=i_circuit_example["diff_method"]
         )
-        i_circ_estimate = i_resource_estimator.estimate_num_training_circuits(1000, 100)
+        i_circ_estimate = i_resource_estimator.estimate_num_training_circuits(
+            1000, 100
+        )
         print(
             f"For a Sim{i_circ_ansatz_stats['ansatz_idx']} ansatz with "
             f"{i_circ_ansatz_stats['n_qubits']} and "

@@ -26,6 +26,10 @@ VQCs typically consist of 3 distinct parts:
  - A trainable quantum circuit, where the ansatz is picked from a standard set, or designed to increase performance on a given dataset.
  - Measurement of the quantum state.
  
+<p align="center">
+  <img src="figures\README_imgs\vqc.png" alt="VQC structure"/>
+</p>
+
 This can be combined with larger classical networks that reduce the number of features in a dataset to a size suitable for embedding on a quantum computer. Then, this model is paired with a loss function and optimiser to train.  
 
 Difficulty arises from the fact that seemingly simple circuits need thousands of circuit executions to train. Let's work through some examples and see.
@@ -34,10 +38,10 @@ At a basic level, we need to consider:
  - Training set size
  - Number of epochs run
  - Parameterised circuit structure
- - Method for gradient calculation
+ - [Method for gradient calculation](https://docs.pennylane.ai/en/stable/introduction/interfaces.html)
  - Whether there are trainable layers before the quantum circuit, and if so, the parameterisation of the classical data embedding
 
-Extensions of this should also take into account multi-programming, error mitigation or suppression techniques and batching interactions.
+Extensions of this should also take into account [multi-programming](https://memlab.ece.gatech.edu/papers/MICRO_2019_4.pdf), error mitigation or error suppression techniques and batching interactions.
 
 For the following, we take the numbered ansatze from [Sim et al.](https://arxiv.org/abs/1905.10876) on 4 qubits, with a depth of 1 and no trainable layers before the quantum circuit. 
 
